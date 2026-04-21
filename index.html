@@ -1541,6 +1541,7 @@ body.hovering #cursor-dot { transform: translate(-50%,-50%) scale(1.6); }
       <div class="admin-header-bar">
         <div class="admin-col-title" style="margin:0">CONTEÚDOS CADASTRADOS</div>
         <div style="display:flex;gap:0.5rem">
+          <button class="btn-primary" style="padding:0.3rem 0.8rem;font-size:0.72rem" onclick="startNewContent()">+ NOVO VÍDEO</button>
           <button class="btn-secondary" style="padding:0.3rem 0.8rem;font-size:0.72rem" onclick="cleanDuplicates()">LIMPAR DUPLICATAS</button>
           <button class="btn-logout" onclick="adminLogout()">SAIR</button>
         </div>
@@ -2827,6 +2828,11 @@ function editContent(id) {
   document.getElementById('f-price').value = item.price != null ? item.price : 0;
   document.getElementById('f-free-with-sub').checked = item.free_with_sub !== false;
   document.getElementById('admin-form-title').textContent = 'EDITAR CONTEÚDO';
+}
+
+function startNewContent() {
+  cancelEdit();
+  document.getElementById('edit-panel').scrollIntoView({ behavior: 'smooth' });
 }
 
 function cancelEdit() {
