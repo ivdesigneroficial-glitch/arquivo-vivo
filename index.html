@@ -1583,6 +1583,19 @@ body.hovering #cursor-dot { transform: translate(-50%,-50%) scale(1.6); }
             <input class="form-input" id="f-dur" placeholder="1h 14min"/>
           </div>
         </div>
+        <div class="form-field" style="border:1px dashed var(--border);padding:0.8rem;border-radius:4px;background:rgba(200,136,42,0.04)">
+          <label class="form-label" style="color:var(--amber)">🔄 CAPAS ALTERNATIVAS (TESTE A/B) <span style="color:var(--text-muted);font-size:0.7rem;font-weight:400">— opcional, para variar a thumb automaticamente a cada 4h</span></label>
+          <div class="form-row" style="margin-top:0.6rem">
+            <div class="form-field">
+              <label class="form-label" style="font-size:0.7rem">CAPA 2 (URL)</label>
+              <input class="form-input" id="f-thumb-2" placeholder="https://…"/>
+            </div>
+            <div class="form-field">
+              <label class="form-label" style="font-size:0.7rem">CAPA 3 (URL)</label>
+              <input class="form-input" id="f-thumb-3" placeholder="https://…"/>
+            </div>
+          </div>
+        </div>
         <div class="form-field">
           <label class="form-label">LINK YOUTUBE</label>
           <input class="form-input" id="f-yt" placeholder="youtube.com/watch?v=…"/>
@@ -1852,7 +1865,7 @@ function renderAccountPage() {
   } else {
     purchContainer.innerHTML = purchased.map(c => `
       <div class="purchase-item" onclick="navigate('content',${c.id})">
-        <img class="purchase-thumb" src="${c.thumbnail}" alt=""/>
+        <img class="purchase-thumb" src="${getRotatingThumb(c)}" alt=""/>
         <div class="purchase-info">
           <div class="purchase-title">${c.title}</div>
           <div class="purchase-meta">${c.duration} · ${c.category}</div>
@@ -2372,7 +2385,7 @@ function cardHTML(item, extraClass = '') {
   const playLabel = locked ? `🔒 ${fmtPrice(item.price)}` : '▶ ASSISTIR';
   return `
   <div class="card ${extraClass} ${locked?'is-locked':''} reveal" onclick="navigate('content',${item.id})" style="cursor:none">
-    <img class="card-thumb" src="${item.thumbnail}" alt="${item.title}" loading="lazy"/>
+    <img class="card-thumb" src="${getRotatingThumb(item)}" alt="${item.title}" loading="lazy"/>
     <div class="card-top-gradient"></div>
     <div class="card-bottom-gradient"></div>
     <div class="card-seals">${sealHTML(item)}</div>
@@ -2410,7 +2423,7 @@ function renderHome() {
     document.getElementById('featured-container').innerHTML = `
     <div class="featured-card reveal" onclick="navigate('content',${featured.id})">
       <div class="featured-card-image">
-        <img src="${featured.thumbnail}" alt="${featured.title}" loading="lazy"/>
+        <img src="${getRotatingThumb(featured)}" alt="${featured.title}" loading="lazy"/>
       </div>
       <div class="featured-overlay">
         <span class="featured-seal">EM DESTAQUE</span>
@@ -2564,7 +2577,7 @@ function renderContentPage(id) {
   const item = content.find(c => c.id === id);
   if (!item) return;
 
-  document.getElementById('content-hero-img').src = item.thumbnail;
+  document.getElementById('content-hero-img').src = getRotatingThumb(item);
   document.getElementById('content-hero-title').textContent = item.title;
 
   // Meta row
@@ -2818,6 +2831,8 @@ function editContent(id) {
   document.getElementById('f-short').value = item.shortDesc;
   document.getElementById('f-long').value = item.longDesc;
   document.getElementById('f-thumb').value = item.thumbnail;
+  document.getElementById('f-thumb-2').value = item.thumbnail_2 || '';
+  document.getElementById('f-thumb-3').value = item.thumbnail_3 || '';
   if (item.thumbnail) showThumbPreview(item.thumbnail); else hideThumbPreview();
   document.getElementById('f-dur').value = item.duration;
   document.getElementById('f-yt').value = item.youtube;
@@ -2835,10 +2850,25 @@ function startNewContent() {
   document.getElementById('edit-panel').scrollIntoView({ behavior: 'smooth' });
 }
 
+// Sistema de rotação de thumbnails (teste A/B automático)
+// Troca a capa a cada 4 horas, com rotação aleatória por vídeo
+function getRotatingThumb(item) {
+  if (!item) return '';
+  const thumbs = [item.thumbnail, item.thumbnail_2, item.thumbnail_3].filter(Boolean);
+  if (thumbs.length <= 1) return item.thumbnail || '';
+  // Bloco de 4 horas + seed único por vídeo = cada vídeo rotaciona em momentos diferentes
+  const timeBlock = Math.floor(Date.now() / (4 * 60 * 60 * 1000));
+  const seed = (item.id || 0) + timeBlock;
+  // Hash simples pra distribuir aleatoriamente
+  const hash = ((seed * 9301 + 49297) % 233280);
+  const idx = hash % thumbs.length;
+  return thumbs[idx];
+}
+
 function cancelEdit() {
   editingId = null;
   document.getElementById('edit-id').value = '';
-  ['f-title','f-short','f-long','f-thumb','f-dur','f-yt','f-price'].forEach(id => document.getElementById(id).value = '');
+  ['f-title','f-short','f-long','f-thumb','f-thumb-2','f-thumb-3','f-dur','f-yt','f-price'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('f-cat').value = 'Resistência';
   ['f-featured','f-new','f-exclusive'].forEach(id => document.getElementById(id).checked = false);
   document.getElementById('f-free-with-sub').checked = true;
@@ -2935,6 +2965,8 @@ async function saveContent() {
     shortDesc: document.getElementById('f-short').value.trim(),
     longDesc: document.getElementById('f-long').value.trim(),
     thumbnail: document.getElementById('f-thumb').value.trim() || `https://picsum.photos/seed/${Date.now()}/400/600`,
+    thumbnail_2: document.getElementById('f-thumb-2').value.trim() || null,
+    thumbnail_3: document.getElementById('f-thumb-3').value.trim() || null,
     youtube: document.getElementById('f-yt').value.trim(),
     duration: document.getElementById('f-dur').value.trim() || '—',
     category: document.getElementById('f-cat').value,
