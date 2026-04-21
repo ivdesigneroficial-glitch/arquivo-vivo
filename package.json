@@ -1,0 +1,17 @@
+{
+  "name": "arquivo-vivo",
+  "version": "1.0.0",
+  "description": "Arquivo Vivo - Sessão do Cativeiro",
+  "private": true,
+  "scripts": {
+    "dev": "netlify dev",
+    "deploy": "netlify deploy --prod"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.0",
+    "mercadopago": "^2.0.15"
+  },
+  "devDependencies": {
+    "netlify-cli": "^17.36.0"
+  }
+}
