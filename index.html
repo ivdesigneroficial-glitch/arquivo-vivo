@@ -1955,7 +1955,7 @@ async function openBuyCheckout(contentId, ev) {
   }
   try {
     const data = await callApi('create-payment', { content_id: contentId });
-    const url = data.sandbox_init_point || data.init_point;
+    const url = data.init_point;
     if (url) {
       window.location.assign(url);
     } else {
