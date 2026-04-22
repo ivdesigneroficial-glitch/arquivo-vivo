@@ -3065,10 +3065,18 @@ async function saveContent() {
     price: Number(document.getElementById('f-price').value) || 0
   };
   if (SUPABASE_CONFIGURED) {
-    // Usando fetch DIRETO pra API REST do Supabase — mostra status HTTP real
+    // Usando fetch DIRETO pra API REST do Supabase — SEM getSession (que trava)
     const trySaveFetch = async (payload) => {
-      const session = (await db.auth.getSession()).data.session;
-      const token = session ? session.access_token : SUPABASE_KEY;
+      // Pega token do localStorage (se existir) sem chamar getSession() que pode travar
+      let token = SUPABASE_KEY;
+      try {
+        const keys = Object.keys(localStorage).filter(k => k.startsWith('sb-') && k.endsWith('-auth-token'));
+        if (keys.length) {
+          const raw = localStorage.getItem(keys[0]);
+          const parsed = JSON.parse(raw);
+          if (parsed && parsed.access_token) token = parsed.access_token;
+        }
+      } catch(_) {}
       const headers = {
         'apikey': SUPABASE_KEY,
         'Authorization': 'Bearer ' + token,
