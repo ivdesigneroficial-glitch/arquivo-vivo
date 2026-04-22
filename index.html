@@ -3047,25 +3047,30 @@ async function saveContent() {
     price: Number(document.getElementById('f-price').value) || 0
   };
   if (SUPABASE_CONFIGURED) {
+    // Timeout de 12s - se o Supabase pendurar, aborta
+    const withTimeout = (promise, ms, label) => Promise.race([
+      promise,
+      new Promise((_, rej) => setTimeout(() => rej(new Error('TIMEOUT em ' + label + ' (' + ms + 'ms)')), ms))
+    ]);
+    const trySave = async (payload) => {
+      console.log('[saveContent] enviando ao Supabase...', editingId ? 'UPDATE' : 'INSERT');
+      let res;
+      if (editingId) {
+        res = await withTimeout(db.from('contents').update(payload).eq('id', editingId), 12000, 'update');
+      } else {
+        res = await withTimeout(db.from('contents').insert(payload), 12000, 'insert');
+      }
+      console.log('[saveContent] resposta Supabase:', res);
+      if (res && res.error) throw res.error;
+    };
     try {
-      const trySave = async (payload) => {
-        if (editingId) {
-          const { error } = await db.from('contents').update(payload).eq('id', editingId);
-          if (error) throw error;
-        } else {
-          const { error } = await db.from('contents').insert(payload);
-          if (error) throw error;
-        }
-      };
       try {
         await trySave(item);
       } catch (err) {
-        // Fallback: se as colunas thumbnail_2/3 ainda não existem no Supabase, salva sem elas
         const msg = (err.message || '').toLowerCase();
         if (msg.includes('thumbnail_2') || msg.includes('thumbnail_3') || msg.includes('column')) {
           const { thumbnail_2, thumbnail_3, ...fallback } = item;
           await trySave(fallback);
-          console.warn('Salvou sem thumbnail_2/3 — rode o SQL ALTER TABLE contents ADD COLUMN thumbnail_2 text, ADD COLUMN thumbnail_3 text;');
         } else {
           throw err;
         }
@@ -3077,8 +3082,7 @@ async function saveContent() {
       }
     } catch(e) {
       console.error('[saveContent] erro supabase:', e);
-      alert('Erro ao salvar no Supabase: ' + e.message);
-      done(false, 'ERRO: ' + e.message);
+      done(false, 'ERRO: ' + (e.message || 'desconhecido'));
       return;
     }
   } else {
@@ -3094,11 +3098,24 @@ async function saveContent() {
       return;
     }
   }
-  cancelEdit();
-  renderAdminList();
-  renderAll();
-  done(true, 'SALVO ✓ — CONTEÚDO NO AR');
+  try {
+    cancelEdit();
+    renderAdminList();
+    renderAll();
+    done(true, 'SALVO ✓ — CONTEÚDO NO AR');
+  } catch (e) {
+    console.error('[saveContent] erro ao renderizar apos salvar:', e);
+    done(true, 'SALVO (recarregue a pagina)');
+  }
 }
+
+// Captura qualquer erro global e mostra na tela
+window.addEventListener('error', function(ev) {
+  try { showToast('ERRO JS: ' + (ev.message || 'desconhecido'), '#c83a3a'); } catch(_){}
+});
+window.addEventListener('unhandledrejection', function(ev) {
+  try { showToast('PROMISE ERRO: ' + (ev.reason && ev.reason.message || ev.reason || 'desconhecido'), '#c83a3a'); } catch(_){}
+});
 
 async function cleanDuplicates() {
   const seen = new Map();
