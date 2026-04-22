@@ -3040,13 +3040,44 @@ async function saveContent() {
     const dup = content.find(c => c.title.trim().toLowerCase() === title.toLowerCase());
     if (dup) editingId = dup.id;
   }
-  // BLOQUEIO: se a capa ainda é data URL (base64), upload Supabase falhou — não deixa salvar
-  const t1 = document.getElementById('f-thumb').value.trim();
-  const t2 = document.getElementById('f-thumb-2').value.trim();
-  const t3 = document.getElementById('f-thumb-3').value.trim();
-  if (SUPABASE_CONFIGURED && (t1.startsWith('data:') || t2.startsWith('data:') || t3.startsWith('data:'))) {
-    done(false, 'UPLOAD DE CAPA NAO TERMINOU — SUBA A IMAGEM DE NOVO');
-    return;
+  // Se alguma capa ainda é data URL, sobe pro Storage AGORA antes de salvar
+  const uploadDataUrlToStorage = async (dataUrl, n) => {
+    try {
+      const res = await fetch(dataUrl);
+      const blob = await res.blob();
+      const fileName = `thumb_${n}_${Date.now()}.jpg`;
+      const { error } = await db.storage.from('thumbnails').upload(fileName, blob, { contentType: 'image/jpeg', upsert: true });
+      if (error) throw error;
+      const { data } = db.storage.from('thumbnails').getPublicUrl(fileName);
+      return data.publicUrl;
+    } catch (err) {
+      throw new Error('Upload capa ' + n + ' falhou: ' + err.message);
+    }
+  };
+  if (SUPABASE_CONFIGURED) {
+    try {
+      const t1 = document.getElementById('f-thumb').value.trim();
+      const t2 = document.getElementById('f-thumb-2').value.trim();
+      const t3 = document.getElementById('f-thumb-3').value.trim();
+      if (t1.startsWith('data:')) {
+        showToast('ENVIANDO CAPA 1...', '#c8882a');
+        const url = await uploadDataUrlToStorage(t1, 1);
+        document.getElementById('f-thumb').value = url;
+      }
+      if (t2.startsWith('data:')) {
+        showToast('ENVIANDO CAPA 2...', '#c8882a');
+        const url = await uploadDataUrlToStorage(t2, 2);
+        document.getElementById('f-thumb-2').value = url;
+      }
+      if (t3.startsWith('data:')) {
+        showToast('ENVIANDO CAPA 3...', '#c8882a');
+        const url = await uploadDataUrlToStorage(t3, 3);
+        document.getElementById('f-thumb-3').value = url;
+      }
+    } catch (err) {
+      done(false, err.message);
+      return;
+    }
   }
   const item = {
     id: editingId || Date.now(),
