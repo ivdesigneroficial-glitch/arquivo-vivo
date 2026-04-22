@@ -2991,13 +2991,40 @@ function handleThumbFileN(input, n) {
   reader.readAsDataURL(file);
 }
 
+function showToast(msg, color) {
+  let t = document.getElementById('__toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = '__toast';
+    t.style.cssText = 'position:fixed;top:30px;left:50%;transform:translateX(-50%);padding:1rem 2rem;background:#1a1a1a;border:2px solid var(--amber);color:#fff;font-family:Cinzel,serif;letter-spacing:0.15em;font-size:0.85rem;z-index:99999;border-radius:4px;box-shadow:0 4px 20px rgba(0,0,0,0.6);transition:opacity 0.3s;opacity:0';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.borderColor = color || '#c8882a';
+  t.style.opacity = '1';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => { t.style.opacity = '0'; }, 2500);
+}
+
 let _savingContent = false;
 async function saveContent() {
-  if (_savingContent) return;
+  console.log('[saveContent] clicado');
+  if (_savingContent) { console.log('[saveContent] já salvando, ignorado'); return; }
   _savingContent = true;
-  setTimeout(() => { _savingContent = false; }, 800);
+  const saveBtn = document.querySelector('button[onclick="saveContent()"]');
+  const origTxt = saveBtn ? saveBtn.textContent : 'SALVAR';
+  if (saveBtn) { saveBtn.textContent = 'SALVANDO...'; saveBtn.disabled = true; }
+  const done = (ok, msg) => {
+    _savingContent = false;
+    if (saveBtn) { saveBtn.textContent = origTxt; saveBtn.disabled = false; }
+    if (msg) showToast(msg, ok ? '#4a9d4a' : '#c83a3a');
+  };
   const title = document.getElementById('f-title').value.trim();
-  if (!title) { document.getElementById('f-title').style.borderColor = 'var(--red)'; return; }
+  if (!title) {
+    document.getElementById('f-title').style.borderColor = 'var(--red)';
+    done(false, 'FALTA O TÍTULO');
+    return;
+  }
   // Evita duplicatas ao criar: se já existe item com mesmo título, edita-o
   if (!editingId) {
     const dup = content.find(c => c.title.trim().toLowerCase() === title.toLowerCase());
@@ -3049,7 +3076,10 @@ async function saveContent() {
         content.unshift(item);
       }
     } catch(e) {
-      alert('Erro ao salvar no Supabase: ' + e.message); return;
+      console.error('[saveContent] erro supabase:', e);
+      alert('Erro ao salvar no Supabase: ' + e.message);
+      done(false, 'ERRO: ' + e.message);
+      return;
     }
   } else {
     if (editingId) {
@@ -3058,11 +3088,16 @@ async function saveContent() {
       content.unshift(item);
     }
     try { localStorage.setItem('arquivo-content', JSON.stringify(content)); }
-    catch(err) { alert('Erro ao salvar: imagem muito grande. Use link externo (imgur) ou imagem menor.'); return; }
+    catch(err) {
+      alert('Erro ao salvar: imagem muito grande. Use link externo (imgur) ou imagem menor.');
+      done(false, 'IMAGEM MUITO GRANDE');
+      return;
+    }
   }
   cancelEdit();
   renderAdminList();
   renderAll();
+  done(true, 'SALVO ✓ — CONTEÚDO NO AR');
 }
 
 async function cleanDuplicates() {
