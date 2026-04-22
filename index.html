@@ -3015,13 +3015,31 @@ async function saveContent() {
   };
   if (SUPABASE_CONFIGURED) {
     try {
+      const trySave = async (payload) => {
+        if (editingId) {
+          const { error } = await db.from('contents').update(payload).eq('id', editingId);
+          if (error) throw error;
+        } else {
+          const { error } = await db.from('contents').insert(payload);
+          if (error) throw error;
+        }
+      };
+      try {
+        await trySave(item);
+      } catch (err) {
+        // Fallback: se as colunas thumbnail_2/3 ainda não existem no Supabase, salva sem elas
+        const msg = (err.message || '').toLowerCase();
+        if (msg.includes('thumbnail_2') || msg.includes('thumbnail_3') || msg.includes('column')) {
+          const { thumbnail_2, thumbnail_3, ...fallback } = item;
+          await trySave(fallback);
+          console.warn('Salvou sem thumbnail_2/3 — rode o SQL ALTER TABLE contents ADD COLUMN thumbnail_2 text, ADD COLUMN thumbnail_3 text;');
+        } else {
+          throw err;
+        }
+      }
       if (editingId) {
-        const { error } = await db.from('contents').update(item).eq('id', editingId);
-        if (error) throw error;
         content = content.map(c => c.id === editingId ? item : c);
       } else {
-        const { error } = await db.from('contents').insert(item);
-        if (error) throw error;
         content.unshift(item);
       }
     } catch(e) {
