@@ -2961,19 +2961,25 @@ function handleThumbFileN(input, n) {
       canvas.width = w; canvas.height = h;
       canvas.getContext('2d').drawImage(img, 0, 0, w, h);
 
+      // Mostra preview IMEDIATAMENTE com data URL (feedback instantâneo)
+      const compressed = canvas.toDataURL('image/jpeg', 0.82);
+      document.getElementById(ids.input).value = compressed;
+      showThumbPreviewN(n, compressed);
+
+      // Se tiver Supabase, tenta subir em background e troca pela URL pública
       if (SUPABASE_CONFIGURED) {
         canvas.toBlob(async function(blob) {
-          const fileName = `thumb_${n}_${Date.now()}.jpg`;
-          const { error } = await db.storage.from('thumbnails').upload(fileName, blob, { contentType: 'image/jpeg', upsert: true });
-          if (error) { alert('Erro ao enviar imagem: ' + error.message); return; }
-          const { data } = db.storage.from('thumbnails').getPublicUrl(fileName);
-          document.getElementById(ids.input).value = data.publicUrl;
-          showThumbPreviewN(n, data.publicUrl);
+          try {
+            const fileName = `thumb_${n}_${Date.now()}.jpg`;
+            const { error } = await db.storage.from('thumbnails').upload(fileName, blob, { contentType: 'image/jpeg', upsert: true });
+            if (error) { console.warn('Upload Supabase falhou, usando data URL:', error.message); return; }
+            const { data } = db.storage.from('thumbnails').getPublicUrl(fileName);
+            document.getElementById(ids.input).value = data.publicUrl;
+            showThumbPreviewN(n, data.publicUrl);
+          } catch (err) {
+            console.warn('Erro upload storage (mantendo data URL):', err);
+          }
         }, 'image/jpeg', 0.85);
-      } else {
-        const compressed = canvas.toDataURL('image/jpeg', 0.82);
-        document.getElementById(ids.input).value = compressed;
-        showThumbPreviewN(n, compressed);
       }
     };
     img.onerror = function() {
