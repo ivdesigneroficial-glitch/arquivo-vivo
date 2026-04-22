@@ -13,6 +13,7 @@
   "routes": [
     { "src": "/api/mp-webhook", "dest": "/api/mp-webhook.js" },
     { "src": "/api/create-payment", "dest": "/api/create-payment.js" },
+    { "src": "/api/create-cart-payment", "dest": "/api/create-cart-payment.js" },
     { "src": "/api/create-subscription", "dest": "/api/create-subscription.js" },
     { "src": "/(.*)", "dest": "/index.html" }
   ]

@@ -36,7 +36,23 @@ export const handler = async (event) => {
       const status = pay.status; // normaliza direto
       const amount = pay.transaction_amount;
 
-      if (kind === 'purchase' && userId && contentId) {
+      if (kind === 'cart' || extRef.startsWith('cart:')) {
+        // Pagamento de carrinho (múltiplos itens)
+        // Na criação, todas as purchases foram gravadas com mp_payment_id = cartRef.
+        // Aqui atualizamos status e trocamos mp_payment_id pelo payment id real.
+        const cartRef = meta.cart_ref || extRef;
+        const { data: byRef } = await db.from('purchases')
+          .update({ status: status, mp_payment_id: String(pay.id) })
+          .eq('mp_payment_id', cartRef)
+          .select();
+        if (!byRef || byRef.length === 0) {
+          // Webhook reprocessado — atualiza pelo payment id real
+          await db.from('purchases')
+            .update({ status: status })
+            .eq('mp_payment_id', String(pay.id));
+        }
+        console.log('[mp-webhook] cart atualizado:', cartRef, status, 'items=', byRef?.length || 0);
+      } else if (kind === 'purchase' && userId && contentId) {
         await db.from('purchases').upsert({
           user_id: userId,
           content_id: contentId,
