@@ -2171,7 +2171,18 @@ let previousPage = 'home';
 let currentContentId = null;
 let catalogFilters = { type: 'all', category: 'all' };
 let selectedCategory = 'all';
-let adminLoggedIn = false;
+// Admin fica logado entre recarregamentos (até clicar SAIR ou limpar cache)
+let adminLoggedIn = (function(){
+  try {
+    const saved = localStorage.getItem('arquivo-admin-session');
+    if (!saved) return false;
+    const { expires } = JSON.parse(saved);
+    // Sessão de admin dura 30 dias
+    if (expires && Date.now() < expires) return true;
+    localStorage.removeItem('arquivo-admin-session');
+    return false;
+  } catch(_) { return false; }
+})();
 let editingId = null;
 
 const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
@@ -2709,6 +2720,12 @@ function adminLogin() {
   const pass = document.getElementById('admin-pass').value;
   if (pass === 'arquivo2025') {
     adminLoggedIn = true;
+    // Salva sessão de admin por 30 dias
+    try {
+      localStorage.setItem('arquivo-admin-session', JSON.stringify({
+        expires: Date.now() + (30 * 24 * 60 * 60 * 1000)
+      }));
+    } catch(_) {}
     document.getElementById('admin-login').style.display = 'none';
     document.getElementById('admin-panel').classList.add('visible');
     renderAdminList();
@@ -2816,6 +2833,7 @@ async function loadDashboard() {
 
 function adminLogout() {
   adminLoggedIn = false;
+  try { localStorage.removeItem('arquivo-admin-session'); } catch(_) {}
   document.getElementById('admin-login').style.display = 'flex';
   document.getElementById('admin-panel').classList.remove('visible');
   document.getElementById('admin-pass').value = '';
