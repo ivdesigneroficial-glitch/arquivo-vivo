@@ -1568,7 +1568,7 @@ body.hovering #cursor-dot { transform: translate(-50%,-50%) scale(1.6); }
           </div>
         </div>
         <div class="form-field" style="border:1px solid var(--border);padding:1rem;border-radius:4px;background:rgba(200,136,42,0.04)">
-          <label class="form-label" style="color:var(--amber);margin-bottom:0.6rem;display:block">🎨 CAPAS DO VÍDEO <span style="color:var(--text-muted);font-size:0.7rem;font-weight:400">— a Capa 1 é obrigatória. As 2 e 3 são opcionais para teste A/B (troca automática a cada 4h)</span></label>
+          <label class="form-label" style="color:var(--amber);margin-bottom:0.6rem;display:block">🎨 CAPAS DO VÍDEO <span style="color:var(--text-muted);font-size:0.7rem;font-weight:400">— Suba no <a href="https://imgur.com/upload" target="_blank" style="color:var(--amber);text-decoration:underline">imgur.com</a>, clique com botão direito na imagem → "Copiar endereço da imagem" → cole abaixo. Capa 1 obrigatória. 2 e 3 opcionais (A/B a cada 4h)</span></label>
           <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem">
 
             <!-- CAPA 1 -->
@@ -1578,7 +1578,7 @@ body.hovering #cursor-dot { transform: translate(-50%,-50%) scale(1.6); }
                 <img id="f-thumb-preview-img" src="" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none"/>
                 <span id="f-thumb-1-empty" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:0.65rem;text-align:center;padding:0.5rem">Sem imagem</span>
               </div>
-              <input class="form-input" id="f-thumb" placeholder="URL ou arquivo" oninput="previewThumb()" style="font-size:0.7rem;padding:0.4rem"/>
+              <input class="form-input" id="f-thumb" placeholder="Cole link do Imgur aqui" oninput="previewThumb()" style="font-size:0.7rem;padding:0.4rem"/>
               <input type="file" id="f-thumb-file" accept="image/*" style="display:none" onchange="handleThumbFile(this)"/>
               <button type="button" class="btn-secondary" style="padding:0.3rem;font-size:0.65rem;width:100%" onclick="document.getElementById('f-thumb-file').click()">📁 ESCOLHER</button>
             </div>
@@ -1590,7 +1590,7 @@ body.hovering #cursor-dot { transform: translate(-50%,-50%) scale(1.6); }
                 <img id="f-thumb-2-preview-img" src="" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none"/>
                 <span id="f-thumb-2-empty" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:0.65rem;text-align:center;padding:0.5rem">Sem imagem</span>
               </div>
-              <input class="form-input" id="f-thumb-2" placeholder="URL ou arquivo" oninput="previewThumbN(2)" style="font-size:0.7rem;padding:0.4rem"/>
+              <input class="form-input" id="f-thumb-2" placeholder="Cole link do Imgur aqui" oninput="previewThumbN(2)" style="font-size:0.7rem;padding:0.4rem"/>
               <input type="file" id="f-thumb-2-file" accept="image/*" style="display:none" onchange="handleThumbFileN(this,2)"/>
               <button type="button" class="btn-secondary" style="padding:0.3rem;font-size:0.65rem;width:100%" onclick="document.getElementById('f-thumb-2-file').click()">📁 ESCOLHER</button>
             </div>
@@ -1602,7 +1602,7 @@ body.hovering #cursor-dot { transform: translate(-50%,-50%) scale(1.6); }
                 <img id="f-thumb-3-preview-img" src="" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none"/>
                 <span id="f-thumb-3-empty" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:0.65rem;text-align:center;padding:0.5rem">Sem imagem</span>
               </div>
-              <input class="form-input" id="f-thumb-3" placeholder="URL ou arquivo" oninput="previewThumbN(3)" style="font-size:0.7rem;padding:0.4rem"/>
+              <input class="form-input" id="f-thumb-3" placeholder="Cole link do Imgur aqui" oninput="previewThumbN(3)" style="font-size:0.7rem;padding:0.4rem"/>
               <input type="file" id="f-thumb-3-file" accept="image/*" style="display:none" onchange="handleThumbFileN(this,3)"/>
               <button type="button" class="btn-secondary" style="padding:0.3rem;font-size:0.65rem;width:100%" onclick="document.getElementById('f-thumb-3-file').click()">📁 ESCOLHER</button>
             </div>
@@ -3040,44 +3040,13 @@ async function saveContent() {
     const dup = content.find(c => c.title.trim().toLowerCase() === title.toLowerCase());
     if (dup) editingId = dup.id;
   }
-  // Se alguma capa ainda é data URL, sobe pro Storage AGORA antes de salvar
-  const uploadDataUrlToStorage = async (dataUrl, n) => {
-    try {
-      const res = await fetch(dataUrl);
-      const blob = await res.blob();
-      const fileName = `thumb_${n}_${Date.now()}.jpg`;
-      const { error } = await db.storage.from('thumbnails').upload(fileName, blob, { contentType: 'image/jpeg', upsert: true });
-      if (error) throw error;
-      const { data } = db.storage.from('thumbnails').getPublicUrl(fileName);
-      return data.publicUrl;
-    } catch (err) {
-      throw new Error('Upload capa ' + n + ' falhou: ' + err.message);
-    }
-  };
-  if (SUPABASE_CONFIGURED) {
-    try {
-      const t1 = document.getElementById('f-thumb').value.trim();
-      const t2 = document.getElementById('f-thumb-2').value.trim();
-      const t3 = document.getElementById('f-thumb-3').value.trim();
-      if (t1.startsWith('data:')) {
-        showToast('ENVIANDO CAPA 1...', '#c8882a');
-        const url = await uploadDataUrlToStorage(t1, 1);
-        document.getElementById('f-thumb').value = url;
-      }
-      if (t2.startsWith('data:')) {
-        showToast('ENVIANDO CAPA 2...', '#c8882a');
-        const url = await uploadDataUrlToStorage(t2, 2);
-        document.getElementById('f-thumb-2').value = url;
-      }
-      if (t3.startsWith('data:')) {
-        showToast('ENVIANDO CAPA 3...', '#c8882a');
-        const url = await uploadDataUrlToStorage(t3, 3);
-        document.getElementById('f-thumb-3').value = url;
-      }
-    } catch (err) {
-      done(false, err.message);
-      return;
-    }
+  // Se alguma capa ainda é data URL (upload local falhou), bloqueia — use Imgur!
+  const t1 = document.getElementById('f-thumb').value.trim();
+  const t2 = document.getElementById('f-thumb-2').value.trim();
+  const t3 = document.getElementById('f-thumb-3').value.trim();
+  if (t1.startsWith('data:') || t2.startsWith('data:') || t3.startsWith('data:')) {
+    done(false, 'USE LINK DO IMGUR — cole URL da imagem no campo');
+    return;
   }
   const item = {
     id: editingId || Date.now(),
