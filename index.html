@@ -1563,34 +1563,50 @@ body.hovering #cursor-dot { transform: translate(-50%,-50%) scale(1.6); }
         </div>
         <div class="form-row">
           <div class="form-field">
-            <label class="form-label">URL DA THUMBNAIL <span style="color:var(--amber);font-size:0.7rem;font-weight:400">— ou envie um arquivo abaixo</span></label>
-            <input class="form-input" id="f-thumb" placeholder="https://…" oninput="previewThumb()"/>
-            <label style="display:flex;align-items:center;gap:0.6rem;margin-top:0.5rem;cursor:pointer">
-              <span style="color:var(--text-muted);font-size:0.72rem;letter-spacing:0.08em;text-transform:uppercase">Ou enviar do PC:</span>
-              <input type="file" id="f-thumb-file" accept="image/*" style="display:none" onchange="handleThumbFile(this)"/>
-              <button type="button" class="btn-secondary" style="padding:0.3rem 0.8rem;font-size:0.72rem" onclick="document.getElementById('f-thumb-file').click()">ESCOLHER ARQUIVO</button>
-            </label>
-            <div id="f-thumb-preview" style="margin-top:0.6rem;display:none">
-              <img id="f-thumb-preview-img" src="" alt="preview" style="width:90px;height:130px;object-fit:cover;border:1px solid var(--border);border-radius:2px;display:block"/>
-              <span style="color:var(--text-muted);font-size:0.68rem;margin-top:0.2rem;display:block">Pré-visualização</span>
-            </div>
-          </div>
-          <div class="form-field">
             <label class="form-label">DURAÇÃO</label>
             <input class="form-input" id="f-dur" placeholder="1h 14min"/>
           </div>
         </div>
-        <div class="form-field" style="border:1px dashed var(--border);padding:0.8rem;border-radius:4px;background:rgba(200,136,42,0.04)">
-          <label class="form-label" style="color:var(--amber)">🔄 CAPAS ALTERNATIVAS (TESTE A/B) <span style="color:var(--text-muted);font-size:0.7rem;font-weight:400">— opcional, para variar a thumb automaticamente a cada 4h</span></label>
-          <div class="form-row" style="margin-top:0.6rem">
-            <div class="form-field">
-              <label class="form-label" style="font-size:0.7rem">CAPA 2 (URL)</label>
-              <input class="form-input" id="f-thumb-2" placeholder="https://…"/>
+        <div class="form-field" style="border:1px solid var(--border);padding:1rem;border-radius:4px;background:rgba(200,136,42,0.04)">
+          <label class="form-label" style="color:var(--amber);margin-bottom:0.6rem;display:block">🎨 CAPAS DO VÍDEO <span style="color:var(--text-muted);font-size:0.7rem;font-weight:400">— a Capa 1 é obrigatória. As 2 e 3 são opcionais para teste A/B (troca automática a cada 4h)</span></label>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem">
+
+            <!-- CAPA 1 -->
+            <div style="display:flex;flex-direction:column;gap:0.4rem">
+              <div style="font-family:'Cinzel',serif;font-size:0.7rem;letter-spacing:0.15em;color:var(--text)">CAPA 1 <span style="color:var(--red);font-size:0.65rem">(PRINCIPAL)</span></div>
+              <div id="f-thumb-1-preview-box" style="width:100%;aspect-ratio:2/3;border:1px dashed var(--border);background:rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;overflow:hidden">
+                <img id="f-thumb-preview-img" src="" alt="" style="width:100%;height:100%;object-fit:cover;display:none"/>
+                <span id="f-thumb-1-empty" style="color:var(--text-muted);font-size:0.65rem;text-align:center;padding:0.5rem">Sem imagem</span>
+              </div>
+              <input class="form-input" id="f-thumb" placeholder="URL ou arquivo" oninput="previewThumb()" style="font-size:0.7rem;padding:0.4rem"/>
+              <input type="file" id="f-thumb-file" accept="image/*" style="display:none" onchange="handleThumbFile(this)"/>
+              <button type="button" class="btn-secondary" style="padding:0.3rem;font-size:0.65rem;width:100%" onclick="document.getElementById('f-thumb-file').click()">📁 ESCOLHER</button>
             </div>
-            <div class="form-field">
-              <label class="form-label" style="font-size:0.7rem">CAPA 3 (URL)</label>
-              <input class="form-input" id="f-thumb-3" placeholder="https://…"/>
+
+            <!-- CAPA 2 -->
+            <div style="display:flex;flex-direction:column;gap:0.4rem">
+              <div style="font-family:'Cinzel',serif;font-size:0.7rem;letter-spacing:0.15em;color:var(--text)">CAPA 2 <span style="color:var(--text-muted);font-size:0.65rem">(OPCIONAL)</span></div>
+              <div style="width:100%;aspect-ratio:2/3;border:1px dashed var(--border);background:rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;overflow:hidden">
+                <img id="f-thumb-2-preview-img" src="" alt="" style="width:100%;height:100%;object-fit:cover;display:none"/>
+                <span id="f-thumb-2-empty" style="color:var(--text-muted);font-size:0.65rem;text-align:center;padding:0.5rem">Sem imagem</span>
+              </div>
+              <input class="form-input" id="f-thumb-2" placeholder="URL ou arquivo" oninput="previewThumbN(2)" style="font-size:0.7rem;padding:0.4rem"/>
+              <input type="file" id="f-thumb-2-file" accept="image/*" style="display:none" onchange="handleThumbFileN(this,2)"/>
+              <button type="button" class="btn-secondary" style="padding:0.3rem;font-size:0.65rem;width:100%" onclick="document.getElementById('f-thumb-2-file').click()">📁 ESCOLHER</button>
             </div>
+
+            <!-- CAPA 3 -->
+            <div style="display:flex;flex-direction:column;gap:0.4rem">
+              <div style="font-family:'Cinzel',serif;font-size:0.7rem;letter-spacing:0.15em;color:var(--text)">CAPA 3 <span style="color:var(--text-muted);font-size:0.65rem">(OPCIONAL)</span></div>
+              <div style="width:100%;aspect-ratio:2/3;border:1px dashed var(--border);background:rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;overflow:hidden">
+                <img id="f-thumb-3-preview-img" src="" alt="" style="width:100%;height:100%;object-fit:cover;display:none"/>
+                <span id="f-thumb-3-empty" style="color:var(--text-muted);font-size:0.65rem;text-align:center;padding:0.5rem">Sem imagem</span>
+              </div>
+              <input class="form-input" id="f-thumb-3" placeholder="URL ou arquivo" oninput="previewThumbN(3)" style="font-size:0.7rem;padding:0.4rem"/>
+              <input type="file" id="f-thumb-3-file" accept="image/*" style="display:none" onchange="handleThumbFileN(this,3)"/>
+              <button type="button" class="btn-secondary" style="padding:0.3rem;font-size:0.65rem;width:100%" onclick="document.getElementById('f-thumb-3-file').click()">📁 ESCOLHER</button>
+            </div>
+
           </div>
         </div>
         <div class="form-field">
@@ -2828,10 +2844,12 @@ function editContent(id) {
   document.getElementById('f-title').value = item.title;
   document.getElementById('f-short').value = item.shortDesc;
   document.getElementById('f-long').value = item.longDesc;
-  document.getElementById('f-thumb').value = item.thumbnail;
+  document.getElementById('f-thumb').value = item.thumbnail || '';
   document.getElementById('f-thumb-2').value = item.thumbnail_2 || '';
   document.getElementById('f-thumb-3').value = item.thumbnail_3 || '';
-  if (item.thumbnail) showThumbPreview(item.thumbnail); else hideThumbPreview();
+  if (item.thumbnail)   showThumbPreviewN(1, item.thumbnail);   else hideThumbPreviewN(1);
+  if (item.thumbnail_2) showThumbPreviewN(2, item.thumbnail_2); else hideThumbPreviewN(2);
+  if (item.thumbnail_3) showThumbPreviewN(3, item.thumbnail_3); else hideThumbPreviewN(3);
   document.getElementById('f-dur').value = item.duration;
   document.getElementById('f-yt').value = item.youtube;
   document.getElementById('f-cat').value = item.category;
@@ -2871,7 +2889,9 @@ function cancelEdit() {
   ['f-featured','f-new','f-exclusive'].forEach(id => document.getElementById(id).checked = false);
   document.getElementById('f-free-with-sub').checked = true;
   document.getElementById('admin-form-title').textContent = 'ADICIONAR CONTEÚDO';
-  hideThumbPreview();
+  hideThumbPreviewN(1);
+  hideThumbPreviewN(2);
+  hideThumbPreviewN(3);
 }
 
 function fixImgurUrl(url) {
@@ -2881,29 +2901,51 @@ function fixImgurUrl(url) {
   return url;
 }
 
-function showThumbPreview(src) {
-  const wrap = document.getElementById('f-thumb-preview');
-  const img  = document.getElementById('f-thumb-preview-img');
+// Helpers universais para preview de qualquer capa (1, 2 ou 3)
+// n=1 → inputId 'f-thumb', imgId 'f-thumb-preview-img', emptyId 'f-thumb-1-empty'
+// n=2/3 → inputId 'f-thumb-N', imgId 'f-thumb-N-preview-img', emptyId 'f-thumb-N-empty'
+function _thumbIds(n) {
+  if (n === 1) return { input:'f-thumb', file:'f-thumb-file', img:'f-thumb-preview-img', empty:'f-thumb-1-empty' };
+  return { input:`f-thumb-${n}`, file:`f-thumb-${n}-file`, img:`f-thumb-${n}-preview-img`, empty:`f-thumb-${n}-empty` };
+}
+
+function showThumbPreviewN(n, src) {
+  const ids = _thumbIds(n);
+  const img   = document.getElementById(ids.img);
+  const empty = document.getElementById(ids.empty);
   img.src = src;
-  wrap.style.display = 'block';
+  img.style.display = 'block';
+  if (empty) empty.style.display = 'none';
 }
 
-function hideThumbPreview() {
-  document.getElementById('f-thumb-preview').style.display = 'none';
-  document.getElementById('f-thumb-preview-img').src = '';
-  document.getElementById('f-thumb-file').value = '';
+function hideThumbPreviewN(n) {
+  const ids = _thumbIds(n);
+  const img   = document.getElementById(ids.img);
+  const empty = document.getElementById(ids.empty);
+  const file  = document.getElementById(ids.file);
+  if (img) { img.src = ''; img.style.display = 'none'; }
+  if (empty) empty.style.display = 'block';
+  if (file) file.value = '';
 }
 
-function previewThumb() {
-  const raw = document.getElementById('f-thumb').value.trim();
-  if (!raw) { hideThumbPreview(); return; }
+// Compat — mantém os nomes antigos funcionando (capa 1)
+function showThumbPreview(src) { showThumbPreviewN(1, src); }
+function hideThumbPreview()    { hideThumbPreviewN(1); }
+function previewThumb()        { previewThumbN(1); }
+function handleThumbFile(input){ handleThumbFileN(input, 1); }
+
+function previewThumbN(n) {
+  const ids = _thumbIds(n);
+  const raw = document.getElementById(ids.input).value.trim();
+  if (!raw) { hideThumbPreviewN(n); return; }
   const url = fixImgurUrl(raw);
-  document.getElementById('f-thumb').value = url;
-  showThumbPreview(url);
+  document.getElementById(ids.input).value = url;
+  showThumbPreviewN(n, url);
 }
 
-function handleThumbFile(input) {
+function handleThumbFileN(input, n) {
   if (!input.files || !input.files[0]) return;
+  const ids = _thumbIds(n);
   const file = input.files[0];
   const reader = new FileReader();
   reader.onload = function(e) {
@@ -2920,25 +2962,23 @@ function handleThumbFile(input) {
       canvas.getContext('2d').drawImage(img, 0, 0, w, h);
 
       if (SUPABASE_CONFIGURED) {
-        // Envia para Supabase Storage e usa a URL pública
         canvas.toBlob(async function(blob) {
-          const fileName = `thumb_${Date.now()}.jpg`;
+          const fileName = `thumb_${n}_${Date.now()}.jpg`;
           const { error } = await db.storage.from('thumbnails').upload(fileName, blob, { contentType: 'image/jpeg', upsert: true });
           if (error) { alert('Erro ao enviar imagem: ' + error.message); return; }
           const { data } = db.storage.from('thumbnails').getPublicUrl(fileName);
-          document.getElementById('f-thumb').value = data.publicUrl;
-          showThumbPreview(data.publicUrl);
+          document.getElementById(ids.input).value = data.publicUrl;
+          showThumbPreviewN(n, data.publicUrl);
         }, 'image/jpeg', 0.85);
       } else {
-        // Fallback localStorage: base64 comprimido
         const compressed = canvas.toDataURL('image/jpeg', 0.82);
-        document.getElementById('f-thumb').value = compressed;
-        showThumbPreview(compressed);
+        document.getElementById(ids.input).value = compressed;
+        showThumbPreviewN(n, compressed);
       }
     };
     img.onerror = function() {
-      document.getElementById('f-thumb').value = e.target.result;
-      showThumbPreview(e.target.result);
+      document.getElementById(ids.input).value = e.target.result;
+      showThumbPreviewN(n, e.target.result);
     };
     img.src = e.target.result;
   };
