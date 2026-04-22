@@ -2966,18 +2966,28 @@ function handleThumbFileN(input, n) {
       document.getElementById(ids.input).value = compressed;
       showThumbPreviewN(n, compressed);
 
-      // Se tiver Supabase, tenta subir em background e troca pela URL pública
+      // Se tiver Supabase, tenta subir e FORÇA usar URL pública (data URL não salva no banco)
       if (SUPABASE_CONFIGURED) {
+        showToast('ENVIANDO CAPA ' + n + '...', '#c8882a');
         canvas.toBlob(async function(blob) {
           try {
             const fileName = `thumb_${n}_${Date.now()}.jpg`;
             const { error } = await db.storage.from('thumbnails').upload(fileName, blob, { contentType: 'image/jpeg', upsert: true });
-            if (error) { console.warn('Upload Supabase falhou, usando data URL:', error.message); return; }
+            if (error) {
+              showToast('ERRO UPLOAD CAPA ' + n + ': ' + error.message, '#c83a3a');
+              // Limpa o campo pra não salvar data URL gigante no banco
+              document.getElementById(ids.input).value = '';
+              hideThumbPreviewN(n);
+              return;
+            }
             const { data } = db.storage.from('thumbnails').getPublicUrl(fileName);
             document.getElementById(ids.input).value = data.publicUrl;
             showThumbPreviewN(n, data.publicUrl);
+            showToast('CAPA ' + n + ' ENVIADA ✓', '#4a9d4a');
           } catch (err) {
-            console.warn('Erro upload storage (mantendo data URL):', err);
+            showToast('ERRO UPLOAD CAPA ' + n + ': ' + (err.message || err), '#c83a3a');
+            document.getElementById(ids.input).value = '';
+            hideThumbPreviewN(n);
           }
         }, 'image/jpeg', 0.85);
       }
