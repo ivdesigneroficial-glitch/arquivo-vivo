@@ -3040,14 +3040,22 @@ async function saveContent() {
     const dup = content.find(c => c.title.trim().toLowerCase() === title.toLowerCase());
     if (dup) editingId = dup.id;
   }
+  // BLOQUEIO: se a capa ainda é data URL (base64), upload Supabase falhou — não deixa salvar
+  const t1 = document.getElementById('f-thumb').value.trim();
+  const t2 = document.getElementById('f-thumb-2').value.trim();
+  const t3 = document.getElementById('f-thumb-3').value.trim();
+  if (SUPABASE_CONFIGURED && (t1.startsWith('data:') || t2.startsWith('data:') || t3.startsWith('data:'))) {
+    done(false, 'UPLOAD DE CAPA NAO TERMINOU — SUBA A IMAGEM DE NOVO');
+    return;
+  }
   const item = {
     id: editingId || Date.now(),
     title,
     shortDesc: document.getElementById('f-short').value.trim(),
     longDesc: document.getElementById('f-long').value.trim(),
-    thumbnail: document.getElementById('f-thumb').value.trim() || `https://picsum.photos/seed/${Date.now()}/400/600`,
-    thumbnail_2: document.getElementById('f-thumb-2').value.trim() || null,
-    thumbnail_3: document.getElementById('f-thumb-3').value.trim() || null,
+    thumbnail: t1 || `https://picsum.photos/seed/${Date.now()}/400/600`,
+    thumbnail_2: t2 || null,
+    thumbnail_3: t3 || null,
     youtube: document.getElementById('f-yt').value.trim(),
     duration: document.getElementById('f-dur').value.trim() || '—',
     category: document.getElementById('f-cat').value,
