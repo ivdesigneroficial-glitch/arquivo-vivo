@@ -612,8 +612,8 @@ body.hovering #cursor-dot { transform: translate(-50%,-50%) scale(1.6); }
   pointer-events: none;
 }
 .card:hover .card-overlay { opacity: 1; }
-.card.is-locked .card-thumb { filter: grayscale(0.45) brightness(0.7); }
-.card.is-locked:hover .card-thumb { filter: grayscale(0.3) brightness(0.65); }
+.card.is-locked .card-thumb { filter: none; }
+.card.is-locked:hover .card-thumb { filter: brightness(1.05); }
 .content-access-box {
   border: 1px solid var(--border);
   background: rgba(12,8,4,0.6);
