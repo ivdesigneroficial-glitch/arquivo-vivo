@@ -398,7 +398,8 @@ body.hovering #cursor-dot { transform: translate(-50%,-50%) scale(1.6); }
   background: var(--surface);
 }
 .card-thumb {
-  width: 100%; height: 100%; object-fit: cover;
+  width: 100%; height: 100%; object-fit: contain;
+  background: #000;
   display: block;
   transition: filter 0.35s, transform 0.35s;
 }
@@ -1740,7 +1741,7 @@ body.hovering #cursor-dot { transform: translate(-50%,-50%) scale(1.6); }
             <div style="display:flex;flex-direction:column;gap:0.4rem">
               <div style="font-family:'Cinzel',serif;font-size:0.7rem;letter-spacing:0.15em;color:var(--text)">CAPA 1 <span style="color:var(--red);font-size:0.65rem">(PRINCIPAL)</span></div>
               <div id="f-thumb-1-preview-box" style="position:relative;width:100%;aspect-ratio:2/3;border:1px dashed var(--border);background:rgba(0,0,0,0.3);overflow:hidden">
-                <img id="f-thumb-preview-img" src="" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none"/>
+                <img id="f-thumb-preview-img" src="" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000;display:none"/>
                 <span id="f-thumb-1-empty" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:0.65rem;text-align:center;padding:0.5rem">Sem imagem</span>
               </div>
               <input class="form-input" id="f-thumb" placeholder="Cole link do Imgur aqui" oninput="previewThumb()" style="font-size:0.7rem;padding:0.4rem"/>
@@ -1752,7 +1753,7 @@ body.hovering #cursor-dot { transform: translate(-50%,-50%) scale(1.6); }
             <div style="display:flex;flex-direction:column;gap:0.4rem">
               <div style="font-family:'Cinzel',serif;font-size:0.7rem;letter-spacing:0.15em;color:var(--text)">CAPA 2 <span style="color:var(--text-muted);font-size:0.65rem">(OPCIONAL)</span></div>
               <div style="position:relative;width:100%;aspect-ratio:2/3;border:1px dashed var(--border);background:rgba(0,0,0,0.3);overflow:hidden">
-                <img id="f-thumb-2-preview-img" src="" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none"/>
+                <img id="f-thumb-2-preview-img" src="" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000;display:none"/>
                 <span id="f-thumb-2-empty" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:0.65rem;text-align:center;padding:0.5rem">Sem imagem</span>
               </div>
               <input class="form-input" id="f-thumb-2" placeholder="Cole link do Imgur aqui" oninput="previewThumbN(2)" style="font-size:0.7rem;padding:0.4rem"/>
@@ -1764,7 +1765,7 @@ body.hovering #cursor-dot { transform: translate(-50%,-50%) scale(1.6); }
             <div style="display:flex;flex-direction:column;gap:0.4rem">
               <div style="font-family:'Cinzel',serif;font-size:0.7rem;letter-spacing:0.15em;color:var(--text)">CAPA 3 <span style="color:var(--text-muted);font-size:0.65rem">(OPCIONAL)</span></div>
               <div style="position:relative;width:100%;aspect-ratio:2/3;border:1px dashed var(--border);background:rgba(0,0,0,0.3);overflow:hidden">
-                <img id="f-thumb-3-preview-img" src="" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none"/>
+                <img id="f-thumb-3-preview-img" src="" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000;display:none"/>
                 <span id="f-thumb-3-empty" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:0.65rem;text-align:center;padding:0.5rem">Sem imagem</span>
               </div>
               <input class="form-input" id="f-thumb-3" placeholder="Cole link do Imgur aqui" oninput="previewThumbN(3)" style="font-size:0.7rem;padding:0.4rem"/>
