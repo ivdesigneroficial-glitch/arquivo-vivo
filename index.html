@@ -796,16 +796,16 @@ body.hovering #cursor-dot { transform: translate(-50%,-50%) scale(1.6); }
   margin-bottom: 2rem; overflow: hidden;
   position: relative;
 }
-.youtube-container iframe { width: 100%; height: 100%; border: none; pointer-events: none; }
+.youtube-container iframe { width: 100%; height: 100%; border: none; }
 
-/* Blocos que cobrem o branding nativo do YouTube (canal, logo, botão de compartilhar) */
+/* Blocos que cobrem o branding nativo do YouTube (canal + avatar no topo).
+   NÃO cobrem os controles nativos (barra inferior), pra o usuário poder
+   usar play/pause, progresso, fullscreen e engrenagem de qualidade. */
 .yt-brand-block {
-  position: absolute; background: #000; z-index: 3; pointer-events: none;
+  position: absolute; background: #000; z-index: 3; pointer-events: auto;
 }
-.yt-brand-topleft    { top: 0; left: 0; width: 40%; height: 64px; }
-.yt-brand-topright   { top: 0; right: 0; width: 40%; height: 64px; }
-.yt-brand-bottomright{ bottom: 0; right: 0; width: 120px; height: 56px; }
-.yt-brand-bottomleft { bottom: 0; left: 0; width: 120px; height: 56px; }
+.yt-brand-topleft  { top: 0; left: 0; width: 45%; height: 60px; }
+.yt-brand-topright { top: 0; right: 0; width: 30%; height: 60px; }
 
 /* ===== Controles customizados do player ===== */
 .vc-overlay {
@@ -2837,8 +2837,12 @@ function getYouTubeEmbedUrl(url) {
   // disablekb=1 (desabilita atalhos do teclado do player)
   // fs=1 (permite fullscreen)
   // playsinline=1 (não força fullscreen no iOS)
-  return `https://www.youtube-nocookie.com/embed/${id}?rel=0&modestbranding=1&showinfo=0&iv_load_policy=3&disablekb=1&fs=0&playsinline=1&enablejsapi=1&controls=0&autohide=1&cc_load_policy=0`;
+  return `https://www.youtube-nocookie.com/embed/${id}?rel=0&modestbranding=1&showinfo=0&iv_load_policy=3&disablekb=1&fs=1&playsinline=1&enablejsapi=1&controls=1&autohide=1&cc_load_policy=0`;
 }
+
+// Stub: o HTML ainda chama essa função mas a implementação real nunca existiu.
+// Mantemos vazia pra não quebrar, usando os controles nativos do YouTube.
+function initCustomPlayer() { /* noop — usando controles nativos do YouTube */ }
 
 /* ============================================================
    RENDER HELPERS
@@ -3164,23 +3168,7 @@ function renderContentPage(id) {
       <iframe id="yt-iframe" src="${embedUrl}" title="${item.title}" allow="encrypted-media; fullscreen" allowfullscreen></iframe>
       <div class="yt-brand-block yt-brand-topleft"></div>
       <div class="yt-brand-block yt-brand-topright"></div>
-      <div class="yt-brand-block yt-brand-bottomright"></div>
-      <div class="yt-brand-block yt-brand-bottomleft"></div>
       <div class="video-watermark">${wmText}</div>
-      <div class="vc-overlay" id="vc-overlay">
-        <div class="vc-clickzone" id="vc-clickzone"></div>
-        <div class="vc-center" id="vc-center">▶</div>
-        <div class="vc-bar">
-          <button class="vc-btn" id="vc-play" title="Play/Pause">▶</button>
-          <div class="vc-time" id="vc-time">0:00 / 0:00</div>
-          <div class="vc-progress" id="vc-progress"><div class="vc-progress-fill" id="vc-progress-fill"></div></div>
-          <div class="vc-quality-wrap">
-            <button class="vc-btn" id="vc-gear" title="Qualidade">⚙</button>
-            <div class="vc-quality-menu" id="vc-quality-menu" style="display:none"></div>
-          </div>
-          <button class="vc-btn" id="vc-fs" title="Tela cheia">⛶</button>
-        </div>
-      </div>
     `;
     ytContainer.style.display = 'block';
     initCustomPlayer();
