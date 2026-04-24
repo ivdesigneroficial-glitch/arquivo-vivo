@@ -1843,6 +1843,13 @@ body.hovering #cursor-dot { transform: translate(-50%,-50%) scale(1.6); }
           <button class="btn-logout" onclick="adminLogout()">SAIR</button>
         </div>
       </div>
+      <div style="display:flex;gap:0.5rem;margin-bottom:0.8rem;flex-wrap:wrap;align-items:center">
+        <label style="font-family:'Cinzel',serif;font-size:0.7rem;letter-spacing:0.12em;color:var(--text-muted)">FILTRAR POR CATEGORIA:</label>
+        <select class="form-input" id="admin-filter-cat" onchange="renderAdminList()" style="flex:1;min-width:160px;padding:0.35rem 0.6rem;font-size:0.75rem">
+          <option value="all">Todas</option>
+        </select>
+        <input class="form-input" id="admin-filter-search" placeholder="Buscar por título..." oninput="renderAdminList()" style="flex:1;min-width:160px;padding:0.35rem 0.6rem;font-size:0.75rem"/>
+      </div>
       <div id="admin-items-list"></div>
     </div>
     <div>
@@ -2752,6 +2759,14 @@ async function init() {
   // Auto-libera itens "em breve" cuja data já passou
   try { await checkComingSoonReleases(); } catch(_){}
 
+  // Ordenação global: disponíveis (já no ar) primeiro, EM BREVE por último
+  content.sort((a, b) => {
+    const aSoon = a.coming_soon ? 1 : 0;
+    const bSoon = b.coming_soon ? 1 : 0;
+    if (aSoon !== bSoon) return aSoon - bSoon;
+    return (b.id || 0) - (a.id || 0); // mais recente primeiro dentro de cada grupo
+  });
+
   const savedFavs = localStorage.getItem('arquivo-favorites');
   favorites = savedFavs ? JSON.parse(savedFavs) : [];
 
@@ -3349,7 +3364,7 @@ function toggleDrawer() {
    ============================================================ */
 function adminLogin() {
   const pass = document.getElementById('admin-pass').value;
-  if (pass === 'arquivo2025') {
+  if (pass === 'eusouomaispikadasgalaxiasalphadogcachorrosemcoleirapitbullnosangue') {
     adminLoggedIn = true;
     // Salva sessão de admin por 30 dias
     try {
@@ -3472,10 +3487,35 @@ function adminLogout() {
 }
 
 function renderAdminList() {
-  document.getElementById('admin-items-list').innerHTML = content.map(item => `
+  // Popula o select de categorias (mantendo seleção atual)
+  const catSel = document.getElementById('admin-filter-cat');
+  const currentCat = catSel ? catSel.value : 'all';
+  if (catSel) {
+    const cats = Array.from(new Set(content.map(c => c.category).filter(Boolean))).sort();
+    catSel.innerHTML = '<option value="all">Todas (' + content.length + ')</option>' +
+      cats.map(c => {
+        const n = content.filter(x => x.category === c).length;
+        return `<option value="${c.replace(/"/g,'&quot;')}">${c} (${n})</option>`;
+      }).join('');
+    catSel.value = currentCat && (currentCat === 'all' || cats.includes(currentCat)) ? currentCat : 'all';
+  }
+  const activeCat = catSel ? catSel.value : 'all';
+  const searchEl = document.getElementById('admin-filter-search');
+  const q = (searchEl ? searchEl.value : '').trim().toLowerCase();
+
+  let items = content.slice();
+  if (activeCat !== 'all') items = items.filter(c => c.category === activeCat);
+  if (q) items = items.filter(c => (c.title || '').toLowerCase().includes(q));
+
+  const listEl = document.getElementById('admin-items-list');
+  if (!items.length) {
+    listEl.innerHTML = `<div style="padding:1.2rem;text-align:center;color:var(--text-muted);font-size:0.8rem;border:1px dashed var(--border)">Nenhum conteúdo encontrado nesta categoria/busca.</div>`;
+    return;
+  }
+  listEl.innerHTML = items.map(item => `
   <div class="admin-item">
     <div>
-      <div class="admin-item-title">${item.title}</div>
+      <div class="admin-item-title">${item.title}${item.coming_soon ? ' <span style="color:var(--amber);font-size:0.65rem;letter-spacing:0.15em">· EM BREVE</span>' : ''}</div>
       <div class="admin-item-cat">${item.category} · ${item.duration}</div>
     </div>
     <div class="admin-item-btns">
