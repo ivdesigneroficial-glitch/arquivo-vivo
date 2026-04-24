@@ -2819,8 +2819,7 @@ function cardHTML(item, extraClass = '') {
   const hasAccess = hasAccessToContent(item.id);
   const comingSoon = !!item.coming_soon;
   const locked = isPaid && !hasAccess && !comingSoon;
-  const showPrice = isPaid && !hasAccess;
-  const priceSeal = showPrice
+  const priceSeal = locked
     ? `<span class="seal seal-price"><span class="lock-ico">🔒</span>${fmtPrice(item.price)}</span>`
     : '';
   const playLabel = comingSoon
