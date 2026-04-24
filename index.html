@@ -796,7 +796,98 @@ body.hovering #cursor-dot { transform: translate(-50%,-50%) scale(1.6); }
   margin-bottom: 2rem; overflow: hidden;
   position: relative;
 }
-.youtube-container iframe { width: 100%; height: 100%; border: none; }
+.youtube-container iframe { width: 100%; height: 100%; border: none; pointer-events: none; }
+
+/* Blocos que cobrem o branding nativo do YouTube (canal, logo, botão de compartilhar) */
+.yt-brand-block {
+  position: absolute; background: #000; z-index: 3; pointer-events: none;
+}
+.yt-brand-topleft    { top: 0; left: 0; width: 40%; height: 64px; }
+.yt-brand-topright   { top: 0; right: 0; width: 40%; height: 64px; }
+.yt-brand-bottomright{ bottom: 0; right: 0; width: 120px; height: 56px; }
+.yt-brand-bottomleft { bottom: 0; left: 0; width: 120px; height: 56px; }
+
+/* ===== Controles customizados do player ===== */
+.vc-overlay {
+  position: absolute; inset: 0; z-index: 4;
+  display: flex; flex-direction: column; justify-content: space-between;
+  background: transparent;
+  transition: opacity 0.3s;
+}
+.vc-overlay.hidden-ui { opacity: 0; }
+.vc-overlay.hidden-ui .vc-bar, .vc-overlay.hidden-ui .vc-center { pointer-events: none; }
+.vc-clickzone {
+  position: absolute; top: 0; left: 0; right: 0; bottom: 56px;
+  cursor: pointer; z-index: 1;
+}
+.vc-center {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 84px; height: 84px;
+  background: rgba(0,0,0,0.55);
+  border: 1px solid rgba(200,136,42,0.6);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--amber-light);
+  font-size: 2rem;
+  cursor: pointer;
+  z-index: 3;
+  transition: background 0.2s, transform 0.2s;
+  pointer-events: auto;
+}
+.vc-center:hover { background: rgba(200,136,42,0.3); transform: translate(-50%,-50%) scale(1.08); }
+.vc-center.hidden { display: none; }
+.vc-bar {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  height: 56px;
+  background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 70%, transparent 100%);
+  display: flex; align-items: center; gap: 0.7rem;
+  padding: 0 1rem;
+  z-index: 5;
+  pointer-events: auto;
+}
+.vc-btn {
+  background: transparent; border: none; color: var(--text);
+  font-size: 1.1rem; cursor: pointer;
+  padding: 0.3rem 0.5rem;
+  font-family: 'Cinzel', serif;
+  transition: color 0.2s;
+}
+.vc-btn:hover { color: var(--amber-light); }
+.vc-time {
+  font-family: 'Cinzel', serif; font-size: 0.75rem;
+  letter-spacing: 0.1em; color: var(--text);
+  min-width: 110px;
+}
+.vc-progress {
+  flex: 1; height: 4px; background: rgba(255,255,255,0.15);
+  position: relative; cursor: pointer;
+  border-radius: 2px;
+}
+.vc-progress:hover { height: 6px; }
+.vc-progress-fill {
+  height: 100%; background: var(--amber);
+  width: 0%;
+  border-radius: 2px;
+  pointer-events: none;
+}
+.vc-quality-wrap { position: relative; }
+.vc-quality-menu {
+  position: absolute; bottom: 100%; right: 0;
+  background: rgba(10,6,3,0.95);
+  border: 1px solid var(--border);
+  padding: 0.4rem 0;
+  min-width: 130px;
+  margin-bottom: 0.5rem;
+}
+.vc-quality-menu button {
+  display: block; width: 100%; text-align: left;
+  background: transparent; border: none; color: var(--text);
+  font-family: 'Cinzel', serif; font-size: 0.7rem; letter-spacing: 0.1em;
+  padding: 0.5rem 1rem; cursor: pointer;
+}
+.vc-quality-menu button:hover { background: var(--amber-dark); color: var(--amber-light); }
+.vc-quality-menu button.active { color: var(--amber); }
 /* Watermark com email do usuário — inibe compartilhamento/gravação de tela */
 .video-watermark {
   position: absolute; top: 15%; right: 3%;
@@ -2746,7 +2837,7 @@ function getYouTubeEmbedUrl(url) {
   // disablekb=1 (desabilita atalhos do teclado do player)
   // fs=1 (permite fullscreen)
   // playsinline=1 (não força fullscreen no iOS)
-  return `https://www.youtube-nocookie.com/embed/${id}?rel=0&modestbranding=1&showinfo=0&iv_load_policy=3&disablekb=1&fs=1&playsinline=1&enablejsapi=1`;
+  return `https://www.youtube-nocookie.com/embed/${id}?rel=0&modestbranding=1&showinfo=0&iv_load_policy=3&disablekb=1&fs=0&playsinline=1&enablejsapi=1&controls=0&autohide=1&cc_load_policy=0`;
 }
 
 /* ============================================================
@@ -3070,10 +3161,29 @@ function renderContentPage(id) {
     // o email dele fica visível no vídeo — forte inibidor de pirataria.
     const wmText = (currentUser && currentUser.email) ? currentUser.email : 'ARQUIVO VIVO';
     ytContainer.innerHTML = `
-      <iframe src="${embedUrl}" allowfullscreen title="${item.title}" allow="encrypted-media; fullscreen"></iframe>
+      <iframe id="yt-iframe" src="${embedUrl}" title="${item.title}" allow="encrypted-media; fullscreen" allowfullscreen></iframe>
+      <div class="yt-brand-block yt-brand-topleft"></div>
+      <div class="yt-brand-block yt-brand-topright"></div>
+      <div class="yt-brand-block yt-brand-bottomright"></div>
+      <div class="yt-brand-block yt-brand-bottomleft"></div>
       <div class="video-watermark">${wmText}</div>
+      <div class="vc-overlay" id="vc-overlay">
+        <div class="vc-clickzone" id="vc-clickzone"></div>
+        <div class="vc-center" id="vc-center">▶</div>
+        <div class="vc-bar">
+          <button class="vc-btn" id="vc-play" title="Play/Pause">▶</button>
+          <div class="vc-time" id="vc-time">0:00 / 0:00</div>
+          <div class="vc-progress" id="vc-progress"><div class="vc-progress-fill" id="vc-progress-fill"></div></div>
+          <div class="vc-quality-wrap">
+            <button class="vc-btn" id="vc-gear" title="Qualidade">⚙</button>
+            <div class="vc-quality-menu" id="vc-quality-menu" style="display:none"></div>
+          </div>
+          <button class="vc-btn" id="vc-fs" title="Tela cheia">⛶</button>
+        </div>
+      </div>
     `;
     ytContainer.style.display = 'block';
+    initCustomPlayer();
   } else {
     ytContainer.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-muted);font-family:'Cinzel',serif;font-size:0.7rem;letter-spacing:0.2em">VÍDEO INDISPONÍVEL</div>`;
   }
