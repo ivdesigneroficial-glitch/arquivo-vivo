@@ -796,13 +796,7 @@ body.hovering #cursor-dot { transform: translate(-50%,-50%) scale(1.6); }
   margin-bottom: 2rem; overflow: hidden;
   position: relative;
 }
-.youtube-container iframe { width: 100%; height: 100%; border: none; pointer-events: none; }
-/* Bloco fino no topo: cobre só o nome do canal que aparece quando pausado */
-.yt-top-cover {
-  position: absolute; top: 0; left: 0; right: 0; height: 48px;
-  background: linear-gradient(to bottom, rgba(5,3,1,0.92) 0%, transparent 100%);
-  z-index: 3; pointer-events: none;
-}
+.youtube-container iframe { width: 100%; height: 100%; border: none; }
 
 /* ===== Controles customizados do player ===== */
 .vc-overlay {
@@ -2834,190 +2828,12 @@ function getYouTubeEmbedUrl(url) {
   // disablekb=1 (desabilita atalhos do teclado do player)
   // fs=1 (permite fullscreen)
   // playsinline=1 (não força fullscreen no iOS)
-  return `https://www.youtube-nocookie.com/embed/${id}?rel=0&modestbranding=1&showinfo=0&iv_load_policy=3&disablekb=0&fs=0&playsinline=1&enablejsapi=1&controls=0&autohide=1&cc_load_policy=0&origin=${encodeURIComponent(location.origin)}`;
+  return `https://www.youtube-nocookie.com/embed/${id}?rel=0&modestbranding=1&showinfo=0&iv_load_policy=3&disablekb=1&fs=1&playsinline=1&enablejsapi=1&controls=1&autohide=1&cc_load_policy=0`;
 }
 
-/* ============================================================
-   PLAYER CUSTOMIZADO — YouTube IFrame API
-   ============================================================ */
-let ytPlayer = null;
-let ytPlayerReady = false;
-let ytProgressTimer = null;
-
-function onYouTubeIframeAPIReady() {
-  const iframe = document.getElementById('yt-iframe');
-  if (!iframe) return;
-  ytPlayer = new YT.Player('yt-iframe', {
-    events: {
-      onReady: _onYTReady,
-      onStateChange: _onYTStateChange
-    }
-  });
-}
-
-function _onYTReady() {
-  ytPlayerReady = true;
-  _startProgressTimer();
-  _updatePlayBtn();
-}
-
-function _onYTStateChange(e) {
-  _updatePlayBtn();
-  const center = document.getElementById('vc-center');
-  if (e.data === YT.PlayerState.PLAYING) {
-    if (center) center.classList.add('hidden');
-    _startProgressTimer();
-  } else {
-    if (center) center.classList.remove('hidden');
-    if (e.data === YT.PlayerState.PAUSED || e.data === YT.PlayerState.ENDED) {
-      _stopProgressTimer();
-      _updateProgress();
-    }
-  }
-}
-
-function _updatePlayBtn() {
-  const btn = document.getElementById('vc-play');
-  if (!btn || !ytPlayerReady) return;
-  btn.textContent = ytPlayer.getPlayerState() === YT.PlayerState.PLAYING ? '⏸' : '▶';
-}
-
-function _startProgressTimer() {
-  _stopProgressTimer();
-  ytProgressTimer = setInterval(_updateProgress, 800);
-}
-
-function _stopProgressTimer() {
-  if (ytProgressTimer) { clearInterval(ytProgressTimer); ytProgressTimer = null; }
-}
-
-function _updateProgress() {
-  if (!ytPlayerReady) return;
-  const cur = ytPlayer.getCurrentTime() || 0;
-  const dur = ytPlayer.getDuration() || 0;
-  const pct = dur > 0 ? (cur / dur) * 100 : 0;
-  const fill = document.getElementById('vc-progress-fill');
-  const time = document.getElementById('vc-time');
-  if (fill) fill.style.width = pct + '%';
-  if (time) time.textContent = _fmtTime(cur) + ' / ' + _fmtTime(dur);
-}
-
-function _fmtTime(s) {
-  s = Math.floor(s);
-  const h = Math.floor(s / 3600);
-  const m = Math.floor((s % 3600) / 60);
-  const sec = s % 60;
-  const mm = String(m).padStart(2,'0');
-  const ss = String(sec).padStart(2,'0');
-  return h > 0 ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
-}
-
-function initCustomPlayer() {
-  ytPlayer = null;
-  ytPlayerReady = false;
-  _stopProgressTimer();
-
-  // Carrega a API do YouTube (uma vez só)
-  if (!window.YT) {
-    const tag = document.createElement('script');
-    tag.src = 'https://www.youtube.com/iframe_api';
-    document.head.appendChild(tag);
-  } else if (window.YT && window.YT.Player) {
-    onYouTubeIframeAPIReady();
-  }
-
-  // Play / Pause
-  const playBtn = document.getElementById('vc-play');
-  const center  = document.getElementById('vc-center');
-  const clickzone = document.getElementById('vc-clickzone');
-
-  function togglePlay() {
-    if (!ytPlayerReady) return;
-    ytPlayer.getPlayerState() === YT.PlayerState.PLAYING
-      ? ytPlayer.pauseVideo()
-      : ytPlayer.playVideo();
-  }
-
-  if (playBtn) playBtn.onclick = togglePlay;
-  if (center)  center.onclick  = togglePlay;
-  if (clickzone) clickzone.ondblclick = togglePlay;
-
-  // Barra de progresso — seek
-  const progressBar = document.getElementById('vc-progress');
-  if (progressBar) {
-    progressBar.onclick = (e) => {
-      if (!ytPlayerReady) return;
-      const rect = progressBar.getBoundingClientRect();
-      const pct  = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-      ytPlayer.seekTo(pct * ytPlayer.getDuration(), true);
-    };
-  }
-
-  // Fullscreen
-  const fsBtn = document.getElementById('vc-fs');
-  const container = document.getElementById('youtube-container');
-  if (fsBtn && container) {
-    fsBtn.onclick = () => {
-      if (!document.fullscreenElement) {
-        container.requestFullscreen && container.requestFullscreen();
-        fsBtn.textContent = '⛶';
-      } else {
-        document.exitFullscreen && document.exitFullscreen();
-      }
-    };
-    document.addEventListener('fullscreenchange', () => {
-      if (fsBtn) fsBtn.textContent = document.fullscreenElement ? '⛶' : '⛶';
-    });
-  }
-
-  // Engrenagem — menu de qualidade
-  const gearBtn    = document.getElementById('vc-gear');
-  const qualMenu   = document.getElementById('vc-quality-menu');
-  const qualities  = [
-    { key:'hd1080', label:'1080p HD' },
-    { key:'hd720',  label:'720p HD'  },
-    { key:'large',  label:'480p'     },
-    { key:'medium', label:'360p'     },
-    { key:'small',  label:'240p'     },
-  ];
-  if (gearBtn && qualMenu) {
-    qualMenu.innerHTML = qualities.map(q =>
-      `<button data-q="${q.key}">${q.label}</button>`
-    ).join('');
-    qualMenu.querySelectorAll('button').forEach(b => {
-      b.onclick = (e) => {
-        e.stopPropagation();
-        if (ytPlayerReady) ytPlayer.setPlaybackQuality(b.dataset.q);
-        qualMenu.querySelectorAll('button').forEach(x => x.classList.remove('active'));
-        b.classList.add('active');
-        qualMenu.style.display = 'none';
-      };
-    });
-    gearBtn.onclick = (e) => {
-      e.stopPropagation();
-      qualMenu.style.display = qualMenu.style.display === 'none' ? 'block' : 'none';
-    };
-    document.addEventListener('click', () => { qualMenu.style.display = 'none'; });
-  }
-
-  // Auto-hide controles após 3s de inatividade
-  const overlay = document.getElementById('vc-overlay');
-  let hideTimer = null;
-  function showControls() {
-    if (!overlay) return;
-    overlay.classList.remove('hidden-ui');
-    clearTimeout(hideTimer);
-    hideTimer = setTimeout(() => {
-      if (ytPlayerReady && ytPlayer.getPlayerState() === YT.PlayerState.PLAYING)
-        overlay.classList.add('hidden-ui');
-    }, 3000);
-  }
-  if (overlay) {
-    overlay.addEventListener('mousemove', showControls);
-    overlay.addEventListener('touchstart', showControls, { passive: true });
-    showControls();
-  }
-}
+// Stub: o HTML ainda chama essa função mas a implementação real nunca existiu.
+// Mantemos vazia pra não quebrar, usando os controles nativos do YouTube.
+function initCustomPlayer() { /* noop — usando controles nativos do YouTube */ }
 
 /* ============================================================
    RENDER HELPERS
@@ -3341,22 +3157,7 @@ function renderContentPage(id) {
     const wmText = (currentUser && currentUser.email) ? currentUser.email : 'ARQUIVO VIVO';
     ytContainer.innerHTML = `
       <iframe id="yt-iframe" src="${embedUrl}" title="${item.title}" allow="encrypted-media; fullscreen" allowfullscreen></iframe>
-      <div class="yt-top-cover"></div>
       <div class="video-watermark">${wmText}</div>
-      <div class="vc-overlay" id="vc-overlay">
-        <div class="vc-clickzone" id="vc-clickzone"></div>
-        <div class="vc-center" id="vc-center">▶</div>
-        <div class="vc-bar">
-          <button class="vc-btn" id="vc-play" title="Play/Pause">▶</button>
-          <div class="vc-time" id="vc-time">00:00 / 00:00</div>
-          <div class="vc-progress" id="vc-progress"><div class="vc-progress-fill" id="vc-progress-fill"></div></div>
-          <div class="vc-quality-wrap">
-            <button class="vc-btn" id="vc-gear" title="Qualidade">⚙</button>
-            <div class="vc-quality-menu" id="vc-quality-menu" style="display:none"></div>
-          </div>
-          <button class="vc-btn" id="vc-fs" title="Tela cheia">⛶</button>
-        </div>
-      </div>
     `;
     ytContainer.style.display = 'block';
     initCustomPlayer();
