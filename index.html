@@ -1412,7 +1412,35 @@ body.hovering #cursor-dot { transform: translate(-50%,-50%) scale(1.6); }
   font-family: 'Cormorant Garamond', serif; font-size: 2rem; font-weight: 700;
   color: rgba(200,136,42,0.15); margin-top: 0.3rem;
 }
+/* ===== Plyr — tema customizado âmbar ===== */
+.plyr {
+  --plyr-color-main: #C8882A;
+  --plyr-video-background: #000;
+  --plyr-menu-background: rgba(10,6,3,0.97);
+  --plyr-menu-color: #F5E6D3;
+  --plyr-tooltip-background: rgba(10,6,3,0.97);
+  --plyr-tooltip-color: #F5E6D3;
+  --plyr-badge-background: #C8882A;
+  --plyr-video-control-color: #F5E6D3;
+  --plyr-video-control-color-hover: #0A0603;
+  --plyr-video-control-background-hover: #C8882A;
+  --plyr-range-fill-background: #C8882A;
+  --plyr-font-family: 'Cinzel', serif;
+  width: 100%; height: 100%;
+  border-radius: 0;
+}
+.plyr__control--overlaid {
+  background: rgba(200,136,42,0.85);
+}
+.plyr__control--overlaid:hover {
+  background: #C8882A !important;
+}
+.plyr--full-ui input[type=range] { color: #C8882A; }
 </style>
+
+<!-- Plyr — player customizado sem branding do YouTube -->
+<link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
+<script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js" defer></script>
 </head>
 <body>
 
@@ -2806,9 +2834,8 @@ function goBack() {
 /* ============================================================
    YOUTUBE CONVERTER
    ============================================================ */
-function getYouTubeEmbedUrl(url) {
+function getYouTubeId(url) {
   if (!url) return '';
-  let id = '';
   const patterns = [
     /youtube\.com\/watch\?v=([^&]+)/,
     /youtu\.be\/([^?&]+)/,
@@ -2817,8 +2844,12 @@ function getYouTubeEmbedUrl(url) {
   ];
   for (const p of patterns) {
     const m = url.match(p);
-    if (m) { id = m[1]; break; }
+    if (m) return m[1];
   }
+  return '';
+}
+function getYouTubeEmbedUrl(url) {
+  const id = getYouTubeId(url);
   if (!id) return '';
   // youtube-nocookie + parâmetros que escondem mais coisa do YouTube:
   // rel=0 (não mostra vídeos relacionados de outros canais)
@@ -2833,7 +2864,38 @@ function getYouTubeEmbedUrl(url) {
 
 // Stub: o HTML ainda chama essa função mas a implementação real nunca existiu.
 // Mantemos vazia pra não quebrar, usando os controles nativos do YouTube.
-function initCustomPlayer() { /* noop — usando controles nativos do YouTube */ }
+/* ============================================================
+   PLAYER CUSTOMIZADO — Plyr.io (YouTube sem branding)
+   ============================================================ */
+let plyrInstance = null;
+
+function initCustomPlayer() {
+  if (plyrInstance) {
+    try { plyrInstance.destroy(); } catch (e) {}
+    plyrInstance = null;
+  }
+  const el = document.getElementById('plyr-player');
+  if (!el) return;
+
+  function boot() {
+    if (typeof Plyr === 'undefined') { setTimeout(boot, 120); return; }
+    plyrInstance = new Plyr(el, {
+      controls: ['play-large','play','progress','current-time','duration','mute','volume','settings','fullscreen'],
+      settings: ['quality','speed'],
+      quality: { default: 720, options: [1080, 720, 480, 360, 240] },
+      speed:   { selected: 1, options: [0.75, 1, 1.25, 1.5, 1.75, 2] },
+      ratio:   '16:9',
+      youtube: {
+        noCookie: true, rel: 0, showinfo: 0, iv_load_policy: 3,
+        modestbranding: 1, playsinline: 1
+      },
+      tooltips: { controls: true, seek: true },
+      hideControls: true,
+      keyboard: { focused: true, global: false }
+    });
+  }
+  boot();
+}
 
 /* ============================================================
    RENDER HELPERS
@@ -3152,11 +3214,10 @@ function renderContentPage(id) {
       </div>`;
     ytContainer.style.display = 'block';
   } else if (embedUrl) {
-    // Watermark: identifica o usuário. Se alguém gravar a tela e compartilhar,
-    // o email dele fica visível no vídeo — forte inibidor de pirataria.
     const wmText = (currentUser && currentUser.email) ? currentUser.email : 'ARQUIVO VIVO';
+    const videoId = getYouTubeId(item.youtube);
     ytContainer.innerHTML = `
-      <iframe id="yt-iframe" src="${embedUrl}" title="${item.title}" allow="encrypted-media; fullscreen" allowfullscreen></iframe>
+      <div id="plyr-player" data-plyr-provider="youtube" data-plyr-embed-id="${videoId}"></div>
       <div class="video-watermark">${wmText}</div>
     `;
     ytContainer.style.display = 'block';
