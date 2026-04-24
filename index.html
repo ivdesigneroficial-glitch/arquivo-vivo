@@ -1442,13 +1442,13 @@ body.hovering #cursor-dot { transform: translate(-50%,-50%) scale(1.6); }
 .plyr-block-topleft {
   position: absolute; top: 0; left: 0; width: 320px; height: 72px;
   z-index: 3; pointer-events: auto;
-  background: linear-gradient(135deg, rgba(5,3,1,0.95) 0%, rgba(5,3,1,0.85) 70%, transparent 100%);
+  background: transparent;
 }
-/* Bloqueador: cobre o logo YouTube que aparece nos primeiros 1-3s (antes do Plyr assumir). */
+/* Bloqueador invisível: engole o clique no logo YouTube sem esconder o logo. */
 .plyr-block-topright {
   position: absolute; top: 0; right: 0; width: 140px; height: 72px;
   z-index: 3; pointer-events: auto;
-  background: linear-gradient(225deg, rgba(5,3,1,0.95) 0%, rgba(5,3,1,0.75) 70%, transparent 100%);
+  background: transparent;
 }
 /* Overlay de loading: cobre o vídeo inteiro nos primeiros 2.5s pra esconder o flash do YouTube */
 .plyr-load-cover {
