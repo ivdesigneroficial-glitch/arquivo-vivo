@@ -616,14 +616,15 @@ body.hovering #cursor-dot { transform: translate(-50%,-50%) scale(1.6); }
   opacity: 0; transition: opacity 0.35s, transform 0.35s;
   white-space: nowrap; border: none; cursor: none;
 }
-.card:hover .card-play-btn { opacity: 1; transform: translate(-50%, -50%); }
+.card:hover .card-play-btn { opacity: 0; }
+.card-play-btn { display: none; }
 .card-overlay {
   position: absolute; inset: 0;
-  background: rgba(5,3,1,0.35); z-index: 1;
-  opacity: 0; transition: opacity 0.35s;
-  pointer-events: none;
+  background: transparent; z-index: 1;
+  opacity: 0; pointer-events: none;
+  display: none;
 }
-.card:hover .card-overlay { opacity: 1; }
+.card:hover .card-overlay { opacity: 0; }
 .card.is-locked .card-thumb { filter: none; }
 .card.is-locked:hover .card-thumb { filter: brightness(1.05); }
 .content-access-box {
