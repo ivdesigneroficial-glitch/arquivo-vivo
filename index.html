@@ -798,15 +798,6 @@ body.hovering #cursor-dot { transform: translate(-50%,-50%) scale(1.6); }
 }
 .youtube-container iframe { width: 100%; height: 100%; border: none; }
 
-/* Blocos que cobrem o branding nativo do YouTube (canal + avatar no topo).
-   NÃO cobrem os controles nativos (barra inferior), pra o usuário poder
-   usar play/pause, progresso, fullscreen e engrenagem de qualidade. */
-.yt-brand-block {
-  position: absolute; background: #000; z-index: 3; pointer-events: auto;
-}
-.yt-brand-topleft  { top: 0; left: 0; width: 45%; height: 60px; }
-.yt-brand-topright { top: 0; right: 0; width: 30%; height: 60px; }
-
 /* ===== Controles customizados do player ===== */
 .vc-overlay {
   position: absolute; inset: 0; z-index: 4;
@@ -3166,8 +3157,6 @@ function renderContentPage(id) {
     const wmText = (currentUser && currentUser.email) ? currentUser.email : 'ARQUIVO VIVO';
     ytContainer.innerHTML = `
       <iframe id="yt-iframe" src="${embedUrl}" title="${item.title}" allow="encrypted-media; fullscreen" allowfullscreen></iframe>
-      <div class="yt-brand-block yt-brand-topleft"></div>
-      <div class="yt-brand-block yt-brand-topright"></div>
       <div class="video-watermark">${wmText}</div>
     `;
     ytContainer.style.display = 'block';
