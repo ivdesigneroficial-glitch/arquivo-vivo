@@ -1917,8 +1917,9 @@ body.hovering #cursor-dot { transform: translate(-50%,-50%) scale(1.6); }
           </div>
         </div>
         <div class="form-field">
-          <label class="form-label">LINK YOUTUBE</label>
-          <input class="form-input" id="f-yt" placeholder="youtube.com/watch?v=…"/>
+          <label class="form-label">LINK YOUTUBE <span id="f-yt-status" style="color:var(--amber);font-size:0.65rem;font-weight:400;margin-left:0.5rem"></span></label>
+          <input class="form-input" id="f-yt" placeholder="youtube.com/watch?v=…" oninput="scheduleAutoDetectDuration()"/>
+          <div id="yt-duration-detector" style="position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;opacity:0;pointer-events:none"></div>
         </div>
         <div class="form-field">
           <label class="form-label">CATEGORIA</label>
@@ -2886,6 +2887,76 @@ function getYouTubeId(url) {
   }
   return '';
 }
+// ============= AUTO-DETECTAR DURAÇÃO DO YOUTUBE =============
+let _ytDurationTimer = null;
+let _ytDurationPlayer = null;
+let _ytDurationLastId = '';
+function formatDurationSeconds(s) {
+  s = Math.round(Number(s) || 0);
+  if (s <= 0) return '';
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  if (h > 0) return h + 'h ' + String(m).padStart(2,'0') + 'min';
+  return m + 'min';
+}
+function setYtStatus(text, color) {
+  const el = document.getElementById('f-yt-status');
+  if (!el) return;
+  el.textContent = text || '';
+  el.style.color = color || 'var(--amber)';
+}
+function scheduleAutoDetectDuration() {
+  clearTimeout(_ytDurationTimer);
+  _ytDurationTimer = setTimeout(autoDetectDuration, 700);
+}
+function autoDetectDuration() {
+  const url = (document.getElementById('f-yt').value || '').trim();
+  const id = getYouTubeId(url);
+  if (!id) { setYtStatus(''); return; }
+  if (id === _ytDurationLastId) return; // mesmo ID, já processado
+  _ytDurationLastId = id;
+  setYtStatus('⏳ Detectando duração…', 'var(--amber)');
+  const tryBoot = () => {
+    if (typeof YT === 'undefined' || !YT.Player) {
+      // Plyr.polyfilled carrega YT IFrame API; aguarda
+      setTimeout(tryBoot, 200);
+      return;
+    }
+    try { if (_ytDurationPlayer && _ytDurationPlayer.destroy) _ytDurationPlayer.destroy(); } catch(e){}
+    const host = document.getElementById('yt-duration-detector');
+    if (!host) return;
+    host.innerHTML = '<div id="yt-duration-iframe-target"></div>';
+    _ytDurationPlayer = new YT.Player('yt-duration-iframe-target', {
+      videoId: id,
+      width: 1, height: 1,
+      playerVars: { autoplay: 0, controls: 0, mute: 1 },
+      events: {
+        onReady: (ev) => {
+          try {
+            const secs = ev.target.getDuration();
+            if (secs && secs > 0) {
+              const formatted = formatDurationSeconds(secs);
+              const dur = document.getElementById('f-dur');
+              if (dur) dur.value = formatted;
+              setYtStatus('✓ Duração detectada: ' + formatted, '#7fbf7f');
+            } else {
+              setYtStatus('⚠ Não foi possível detectar (vídeo restrito ou indisponível)', '#d97a4a');
+            }
+          } catch (e) {
+            setYtStatus('⚠ Erro ao ler duração', '#d97a4a');
+          }
+          try { ev.target.destroy(); } catch(e){}
+        },
+        onError: () => {
+          setYtStatus('⚠ Vídeo restrito/privado — preencha duração manualmente', '#d97a4a');
+        }
+      }
+    });
+  };
+  tryBoot();
+}
+// ============================================================
+
 function getYouTubeEmbedUrl(url) {
   const id = getYouTubeId(url);
   if (!id) return '';
@@ -3586,6 +3657,8 @@ function cancelEdit() {
   editingId = null;
   document.getElementById('edit-id').value = '';
   ['f-title','f-short','f-long','f-thumb','f-thumb-2','f-thumb-3','f-dur','f-yt','f-price','f-release-date'].forEach(id => document.getElementById(id).value = '');
+  _ytDurationLastId = '';
+  setYtStatus('');
   document.getElementById('f-cat').value = 'Resistência';
   ['f-featured','f-new','f-exclusive','f-coming-soon'].forEach(id => document.getElementById(id).checked = false);
   document.getElementById('f-free-with-sub').checked = true;
