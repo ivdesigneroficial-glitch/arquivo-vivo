@@ -3317,8 +3317,9 @@ function renderContentPage(id) {
 
   // YouTube / gate de acesso
   const isPaid = item.price && Number(item.price) > 0;
-  const hasAccess = hasAccessToContent(item.id);
-  const comingSoon = !!item.coming_soon;
+  const adminPreview = (typeof adminLoggedIn !== 'undefined' && adminLoggedIn === true);
+  const hasAccess = hasAccessToContent(item.id) || adminPreview;
+  const comingSoon = !!item.coming_soon && !adminPreview;
   const embedUrl = getYouTubeEmbedUrl(item.youtube);
   const ytContainer = document.getElementById('youtube-container');
 
@@ -3392,7 +3393,9 @@ function renderContentPage(id) {
     const badge = document.createElement('div');
     badge.id = 'content-access-box';
     badge.className = 'content-access-box';
-    const reason = 'VOCÊ JÁ TEM ESTE CONTEÚDO';
+    const reason = adminPreview && !hasAccessToContent(item.id)
+      ? '👁 MODO ADMIN — VISUALIZAÇÃO LIBERADA (não disponível para usuários comuns)'
+      : 'VOCÊ JÁ TEM ESTE CONTEÚDO';
     badge.innerHTML = `<div class="content-access-title" style="color:var(--amber)">✓ ${reason}</div>`;
     metaRowEl.insertAdjacentElement('afterend', badge);
   }
