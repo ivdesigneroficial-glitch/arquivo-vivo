@@ -1887,7 +1887,10 @@ body.hovering #cursor-dot { transform: translate(-50%,-50%) scale(1.6); }
               </div>
               <input class="form-input" id="f-thumb" placeholder="Cole link do Imgur aqui" oninput="previewThumb()" style="font-size:0.7rem;padding:0.4rem"/>
               <input type="file" id="f-thumb-file" accept="image/*" style="display:none" onchange="handleThumbFile(this)"/>
-              <button type="button" class="btn-secondary" style="padding:0.3rem;font-size:0.65rem;width:100%" onclick="document.getElementById('f-thumb-file').click()">📁 ESCOLHER</button>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.3rem">
+                <button type="button" class="btn-secondary" style="padding:0.3rem;font-size:0.65rem" onclick="document.getElementById('f-thumb-file').click()">📁 ESCOLHER</button>
+                <button type="button" class="btn-secondary" style="padding:0.3rem;font-size:0.65rem;color:#d97a4a;border-color:rgba(217,122,74,0.4)" onclick="clearThumbN(1)">🗑 REMOVER</button>
+              </div>
             </div>
 
             <!-- CAPA 2 -->
@@ -1899,7 +1902,10 @@ body.hovering #cursor-dot { transform: translate(-50%,-50%) scale(1.6); }
               </div>
               <input class="form-input" id="f-thumb-2" placeholder="Cole link do Imgur aqui" oninput="previewThumbN(2)" style="font-size:0.7rem;padding:0.4rem"/>
               <input type="file" id="f-thumb-2-file" accept="image/*" style="display:none" onchange="handleThumbFileN(this,2)"/>
-              <button type="button" class="btn-secondary" style="padding:0.3rem;font-size:0.65rem;width:100%" onclick="document.getElementById('f-thumb-2-file').click()">📁 ESCOLHER</button>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.3rem">
+                <button type="button" class="btn-secondary" style="padding:0.3rem;font-size:0.65rem" onclick="document.getElementById('f-thumb-2-file').click()">📁 ESCOLHER</button>
+                <button type="button" class="btn-secondary" style="padding:0.3rem;font-size:0.65rem;color:#d97a4a;border-color:rgba(217,122,74,0.4)" onclick="clearThumbN(2)">🗑 REMOVER</button>
+              </div>
             </div>
 
             <!-- CAPA 3 -->
@@ -1911,7 +1917,10 @@ body.hovering #cursor-dot { transform: translate(-50%,-50%) scale(1.6); }
               </div>
               <input class="form-input" id="f-thumb-3" placeholder="Cole link do Imgur aqui" oninput="previewThumbN(3)" style="font-size:0.7rem;padding:0.4rem"/>
               <input type="file" id="f-thumb-3-file" accept="image/*" style="display:none" onchange="handleThumbFileN(this,3)"/>
-              <button type="button" class="btn-secondary" style="padding:0.3rem;font-size:0.65rem;width:100%" onclick="document.getElementById('f-thumb-3-file').click()">📁 ESCOLHER</button>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.3rem">
+                <button type="button" class="btn-secondary" style="padding:0.3rem;font-size:0.65rem" onclick="document.getElementById('f-thumb-3-file').click()">📁 ESCOLHER</button>
+                <button type="button" class="btn-secondary" style="padding:0.3rem;font-size:0.65rem;color:#d97a4a;border-color:rgba(217,122,74,0.4)" onclick="clearThumbN(3)">🗑 REMOVER</button>
+              </div>
             </div>
 
           </div>
@@ -3708,6 +3717,15 @@ function showThumbPreview(src) { showThumbPreviewN(1, src); }
 function hideThumbPreview()    { hideThumbPreviewN(1); }
 function previewThumb()        { previewThumbN(1); }
 function handleThumbFile(input){ handleThumbFileN(input, 1); }
+
+function clearThumbN(n) {
+  const ids = _thumbIds(n);
+  const inputEl = document.getElementById(ids.input);
+  if (inputEl) inputEl.value = '';
+  const fileEl = document.getElementById(ids.file);
+  if (fileEl) fileEl.value = '';
+  hideThumbPreviewN(n);
+}
 
 function previewThumbN(n) {
   const ids = _thumbIds(n);
